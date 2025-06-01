@@ -1,6 +1,8 @@
 package main
 
-import "log"
+import (
+	"log"
+)
 
 func main() {
 	cfg := config{
@@ -11,5 +13,6 @@ func main() {
 		config: cfg,
 	}
 
-	log.Fatal(app.run())
+	mux := app.mount()
+	log.Fatal(app.run(mux))
 }
