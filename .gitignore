@@ -1,5 +1,7 @@
 .git
 .air.toml
+.env
+.env.dev
 
 my-notes.md
 /bin
