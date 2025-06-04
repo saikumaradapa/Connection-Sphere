@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/saikumaradapa/Connection-Sphere/internal/env"
+	"github.com/saikumaradapa/Connection-Sphere/internal/store"
 )
 
 func main() {
@@ -21,8 +22,10 @@ func main() {
 		addr: fmt.Sprintf("%s:%s", host, port),
 	}
 
+	store := store.NewStorage(nil)
 	app := &application{
 		config: cfg,
+		store:  store,
 	}
 
 	mux := app.mount()

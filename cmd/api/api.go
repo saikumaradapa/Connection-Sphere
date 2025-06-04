@@ -7,10 +7,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/saikumaradapa/Connection-Sphere/internal/store"
 )
 
 type application struct {
 	config config
+	store  store.Storage
 }
 
 type config struct {
