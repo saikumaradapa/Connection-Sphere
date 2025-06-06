@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"database/sql"
+
+	"github.com/lib/pq"
 )
 
 type Post struct {
@@ -31,7 +33,7 @@ func (s *PostStore) Create(ctx context.Context, post *Post) error {
 		post.Content,
 		post.Title,
 		post.UserID,
-		post.Tags,
+		pq.Array(post.Tags),
 	).Scan(
 		&post.ID,
 		&post.CreatedAt,
