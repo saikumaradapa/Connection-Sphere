@@ -22,7 +22,7 @@ func main() {
 	cfg := config{
 		addr: fmt.Sprintf("%s:%s", host, port),
 		db: dbConfig{
-			addr:         env.GetString("DB_ADDR", "postgres://admin:admin@localhost/connectionSphere?sslmode=disable"),
+			addr:         env.GetString("DB_ADDR", "postgres://admin:admin@127.0.0.1:5432/connectionSphere?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_IDLE_OPEN_CONNS", 30),
 			maxIdleTime:  env.GetString("MAX_IDLE_TIME", "15m"),
