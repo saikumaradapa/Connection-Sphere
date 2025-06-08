@@ -5,8 +5,8 @@ services:
     image: postgres:16.3
     container_name: postgres-db
     environment: 
-      POSTGRES_DB: connectionSphere
-      POSTGRES_USER: admin
+      POSTGRES_DB: connection_sphere
+      POSTGRES_USER: root
       POSTGRES_PASSWORD: admin
     volumes:
       - db-data:/var/lib/postgresql/data
