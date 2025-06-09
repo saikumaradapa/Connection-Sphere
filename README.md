@@ -26,3 +26,13 @@ air init
 # Start the live-reloading server
 air
 ```
+
+## golang-migrate
+```bash 
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest # to install the migraions package
+
+migrate create -seq -ext sql -dir cmd/migrate/migrations create_users # to create migraion 
+
+
+
+```
