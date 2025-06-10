@@ -1,0 +1,2 @@
+CREATE DATABASE connection_sphere;
+CREATE EXTENSION IF NOT EXISTS citext;
