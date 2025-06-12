@@ -10,6 +10,8 @@ import (
 	"github.com/saikumaradapa/Connection-Sphere/internal/store"
 )
 
+const version = "0.0.1"
+
 func main() {
 	// Load env vars from .env.dev
 	if err := godotenv.Load(".env.dev"); err != nil {
@@ -27,6 +29,7 @@ func main() {
 			maxIdleConns: env.GetInt("DB_IDLE_OPEN_CONNS", 30),
 			maxIdleTime:  env.GetString("MAX_IDLE_TIME", "15m"),
 		},
+		env: env.GetString("ENV", "dev"),
 	}
 
 	db, err := db.New(
