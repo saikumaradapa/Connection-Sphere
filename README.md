@@ -42,7 +42,7 @@ migrate create -seq -ext sql -dir cmd/migrate/migrations create_users # to creat
 ```
 
 
-✅ Struct Validation with validator
+### ✅ Struct Validation with validator
 ```bash
 go get github.com/go-playground/validator/v10
 ```
