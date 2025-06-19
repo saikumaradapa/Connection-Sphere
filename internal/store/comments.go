@@ -41,7 +41,7 @@ func (s *CommentStore) GetByPostID(ctx context.Context, postID int64) ([]Comment
 	for rows.Next() {
 		var c Comment
 		c.User = User{}
-		err := rows.Scan(&c.ID, &c.PostID, &c.UserID, &c.Content, &c.Created_at, &c.User.Username, &c.User.ID)
+		err := rows.Scan(&c.ID, &c.PostID, &c.UserID, &c.Content, &c.CreatedAt, &c.User.Username, &c.User.ID)
 		if err != nil {
 			return nil, err
 		}
