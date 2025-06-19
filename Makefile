@@ -27,3 +27,9 @@ migrate-up:
 # Usage: make migrate-down count=n (e.g., make migrate-down count=1)
 migrate-down:
 	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) down $(count)
+
+
+.PHONY: seed
+
+seed:
+	@go run cmd/migrate/seed/main.go
