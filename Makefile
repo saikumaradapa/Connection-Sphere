@@ -28,8 +28,17 @@ migrate-up:
 migrate-down:
 	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) down $(count)
 
+# Declare 'migrate-force' as a phony target
+.PHONY: migrate-force
 
+# Force the database to a specific version (used to fix dirty state)
+# Usage: make migrate-force VER=n
+migrate-force:
+	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) force $(VER)
+
+# Declare 'seed' as a phony target
 .PHONY: seed
 
+# Run the seeding database script
 seed:
 	@go run cmd/migrate/seed/main.go
