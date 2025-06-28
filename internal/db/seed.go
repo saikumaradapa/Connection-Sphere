@@ -99,6 +99,14 @@ func Seed(store store.Storage) {
 		}
 	}
 
+	followers := generateFollowers(500, users)
+	for _, f := range followers {
+		if err := store.Followers.Follow(ctx, f.UserID, f.FollowerID); err != nil {
+			log.Println("error while creating follower:", err)
+			return
+		}
+	}
+
 	log.Println("seeding completed successfully")
 }
 
@@ -148,4 +156,37 @@ func generateComments(num int, users []*store.User, posts []*store.Post) []*stor
 	}
 
 	return cmts
+}
+
+func generateFollowers(num int, users []*store.User) []*store.Follower {
+	followers := make([]*store.Follower, 0, num)
+	seen := make(map[string]bool)
+
+	for i := 0; i < num; {
+		user := users[rand.IntN(len(users))]
+		follower := users[rand.IntN(len(users))]
+
+		// Skip if user follows themselves
+		if user.ID == follower.ID {
+			continue
+		}
+
+		// Construct a unique key like "userID:followerID"
+		key := fmt.Sprintf("%d:%d", user.ID, follower.ID)
+
+		// Skip if we've already added this pair
+		if seen[key] {
+			continue
+		}
+
+		// Save the pair
+		seen[key] = true
+		followers = append(followers, &store.Follower{
+			UserID:     user.ID,
+			FollowerID: follower.ID,
+		})
+		i++
+	}
+
+	return followers
 }
