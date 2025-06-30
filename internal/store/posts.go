@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/lib/pq"
 )
@@ -30,8 +32,13 @@ type PostStore struct {
 	db *sql.DB
 }
 
-func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMetadata, error) {
-	query := `
+func (s *PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedFeedQuery) ([]PostWithMetadata, error) {
+	sortDirection := "DESC"
+	if strings.ToUpper(fq.Sort) == "ASC" {
+		sortDirection = "ASC"
+	}
+
+	query := fmt.Sprintf(`
 		SELECT 
 			p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags,
 			u.username,
@@ -39,21 +46,21 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMe
 		FROM posts p
 		LEFT JOIN comments c ON c.post_id = p.id
 		LEFT JOIN users u ON p.user_id = u.id
-		JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
+		JOIN followers f ON (f.follower_id = p.user_id AND f.user_id = $1) OR p.user_id = $1
 		WHERE 
 			f.user_id = $1 OR p.user_id = $1
 		GROUP BY p.id, u.username
-		ORDER BY p.created_at DESC
-	`
+		ORDER BY p.created_at %s
+		LIMIT $2 OFFSET $3
+	`, sortDirection)
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(ctx, query, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID, fq.Limit, fq.Offset)
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
 	var feed []PostWithMetadata
@@ -70,16 +77,18 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMe
 			&p.User.Username,
 			&p.CommentCount,
 		)
-
 		if err != nil {
 			return nil, err
 		}
-
 		feed = append(feed, p)
 	}
 
-	return feed, nil
+	// Check for any iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
+	return feed, nil
 }
 
 func (s *PostStore) Create(ctx context.Context, post *Post) error {
