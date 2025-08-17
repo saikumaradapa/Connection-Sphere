@@ -41,6 +41,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	
+	defer db.Close()
+	log.Printf("Connected to database at %s", cfg.db.addr)
 
 	store := store.NewStorage(db)
 	app := &application{
