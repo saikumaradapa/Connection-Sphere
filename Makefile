@@ -42,3 +42,7 @@ migrate-force:
 # Run the seeding database script
 seed:
 	@go run cmd/migrate/seed/main.go
+
+.PHONY: gen-docs
+gen-docs:
+	@swag init -g cmd/api/main.go -d . && swag fmt

@@ -12,6 +12,24 @@ import (
 
 const version = "0.0.1"
 
+//	@title			Connection Sphere API
+//	@description	This is the API for Connection Sphere, a platform for connecting people and sharing content.
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+//	@BasePath					/api/v1
+//
+//	@securityDefinitions.apiKey	ApiKeyAuth
+//	@in							header
+//	@name						Authorization
+//	@description				API key for authorization
+
 func main() {
 	// Load env vars from .env.dev
 	if err := godotenv.Load(".env.dev"); err != nil {
@@ -22,7 +40,8 @@ func main() {
 	port := env.GetString("PORT", "3030")
 
 	cfg := config{
-		addr: fmt.Sprintf("%s:%s", host, port),
+		addr:   fmt.Sprintf("%s:%s", host, port),
+		apiURL: env.GetString("EXTERNAL_URL", "localhost:3030"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://root:admin@localhost:5432/connection_sphere?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
@@ -41,7 +60,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	defer db.Close()
 	log.Printf("Connected to database at %s", cfg.db.addr)
 
