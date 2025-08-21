@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 
 	"github.com/saikumaradapa/Connection-Sphere/docs" // This is required to generate Swagger docs
 	"github.com/saikumaradapa/Connection-Sphere/internal/store"
@@ -36,7 +36,7 @@ type dbConfig struct {
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 
-	// A good base middleware stack
+	// Base middleware stack
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -47,11 +47,28 @@ func (app *application) mount() http.Handler {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
+	// Add CORS middleware
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+
+	// Swagger docs (outside /v1 so /swagger/doc.json is accessible)
+	r.Get("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./docs/swagger.json")
+	})
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://"+app.config.addr+"/swagger/doc.json"),
+	))
+
+	// API routes under /v1
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
-
-		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
-		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL))) // The url pointing to API definition
 
 		r.Route("/posts", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
@@ -84,7 +101,7 @@ func (app *application) mount() http.Handler {
 }
 
 func (app *application) run(mux http.Handler) error {
-	// Docs
+	// Swagger info (used in generated docs)
 	docs.SwaggerInfo.Version = version
 	docs.SwaggerInfo.Host = app.config.apiURL
 	docs.SwaggerInfo.BasePath = "/v1"

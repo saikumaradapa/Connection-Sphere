@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/saikumaradapa/Connection-Sphere/internal/store"
 	"net/http"
+
+	"github.com/saikumaradapa/Connection-Sphere/internal/store"
 )
 
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
