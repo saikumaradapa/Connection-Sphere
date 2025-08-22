@@ -3,14 +3,32 @@ package store
 import (
 	"context"
 	"database/sql"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID        int64  `json:"id"`
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	Password  string `json:"-"`
-	CreatedAt string `json:"created_at"`
+	ID        int64    `json:"id"`
+	Username  string   `json:"username"`
+	Email     string   `json:"email"`
+	Password  password `json:"-"`
+	CreatedAt string   `json:"created_at"`
+}
+
+type password struct {
+	text *string
+	hash []byte
+}
+
+func (p *password) Set(text string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	p.text = &text
+	p.hash = hash
+
+	return nil
 }
 
 type UserStore struct {
@@ -72,4 +90,10 @@ func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func (s *UserStore) CreateAndActivate(ctx context.Context, user *User, token string) error {
+	// transaction wrapper
+	// create the user
+	// create the user invite
 }
