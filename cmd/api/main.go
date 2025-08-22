@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"go.uber.org/zap"
+
 	"github.com/joho/godotenv"
 	"github.com/saikumaradapa/Connection-Sphere/internal/db"
 	"github.com/saikumaradapa/Connection-Sphere/internal/env"
@@ -51,6 +53,16 @@ func main() {
 		env: env.GetString("ENV", "dev"),
 	}
 
+	// Logger configuration
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer func(logger *zap.SugaredLogger) {
+		err := logger.Sync()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(logger) // flushes buffer, if any
+
+	// Database connection
 	db, err := db.New(
 		cfg.db.addr,
 		cfg.db.maxOpenConns,
@@ -68,6 +80,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		store:  store,
+		logger: logger,
 	}
 
 	mux := app.mount()
