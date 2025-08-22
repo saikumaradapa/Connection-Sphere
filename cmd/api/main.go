@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -51,6 +52,9 @@ func main() {
 			maxIdleTime:  env.GetString("MAX_IDLE_TIME", "15m"),
 		},
 		env: env.GetString("ENV", "dev"),
+		mail: mailConfig{
+			exp: time.Hour * 3, // 3 days
+		},
 	}
 
 	// Logger configuration
