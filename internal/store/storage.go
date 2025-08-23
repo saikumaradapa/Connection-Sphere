@@ -8,9 +8,11 @@ import (
 )
 
 var (
-	ErrNotFound          = errors.New("resource not found")
-	QueryTimeoutDuration = time.Second * 5
-	ErrAlreadyFollowing  = errors.New("already following the user")
+	ErrNotFound               = errors.New("resource not found")
+	QueryTimeoutDuration      = time.Second * 5
+	ErrAlreadyFollowing       = errors.New("already following the user")
+	ErrInvalidToken           = errors.New("invalid or missing token")
+	ErrActivationTokenExpired = errors.New("activation token has expired")
 )
 
 type Storage struct {
@@ -25,6 +27,7 @@ type Storage struct {
 		GetByID(context.Context, int64) (*User, error)
 		Create(context.Context, *sql.Tx, *User) error
 		CreateAndInvite(ctx context.Context, user *User, token string, duration time.Duration) error
+		Activate(ctx context.Context, token string) error
 	}
 	Comments interface {
 		Create(context.Context, *Comment) error
