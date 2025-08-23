@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"golang.org/x/crypto/bcrypt"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -55,7 +56,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 		ctx,
 		query,
 		user.Username,
-		user.Password,
+		user.Password.hash,
 		user.Email,
 	).Scan(
 		&user.ID,
@@ -135,4 +136,6 @@ func (s *UserStore) createUserInvitation(ctx context.Context, tx *sql.Tx, token 
 	if err != nil {
 		return err
 	}
+
+	return nil
 }

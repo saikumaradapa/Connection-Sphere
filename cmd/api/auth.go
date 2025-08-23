@@ -3,9 +3,10 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/saikumaradapa/Connection-Sphere/internal/store"
-	"net/http"
 )
 
 type RegisterUserPayload struct {

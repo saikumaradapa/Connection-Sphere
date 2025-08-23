@@ -3,6 +3,7 @@
 .env
 .env.dev
 .idea/
+.vscode/
 
 
 my-notes.md
