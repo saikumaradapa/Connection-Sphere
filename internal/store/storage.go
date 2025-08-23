@@ -49,16 +49,21 @@ func NewStorage(db *sql.DB) Storage {
 	}
 }
 
+// withTx is a helper that ensures the given function runs inside a transaction.
 func withTx(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
+	// Step 1: start a transaction
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 
+	// Step 2: run the provided function with the transaction
 	if err := fn(tx); err != nil {
+		// Function failed → rollback (undo changes)
 		_ = tx.Rollback()
 		return err
 	}
 
+	// Step 3: function succeeded → commit (persist changes)
 	return tx.Commit()
 }
