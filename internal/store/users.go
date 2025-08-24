@@ -129,18 +129,28 @@ func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token strin
 	})
 }
 
-func (s *UserStore) createUserInvitation(ctx context.Context, tx *sql.Tx, token string, exp time.Duration, userID int64) error {
-	query := `INSERT INTO user_invitations (token, user_id, expiry) VALUES ($1, $2, $3)`
+func (s *UserStore) Activate(ctx context.Context, token string) error {
 
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
-	defer cancel()
+	return withTx(s.db, ctx, func(tx *sql.Tx) error {
+		// 1. find the user that this token belongs to
+		user, err := s.getUserFromInvitation(ctx, tx, token)
+		if err != nil {
+			return err
+		}
 
-	_, err := tx.ExecContext(ctx, query, token, userID, time.Now().Add(exp))
-	if err != nil {
-		return err
-	}
+		// 2. update the user to set activated = true
+		user.IsActive = true
+		if err := s.update(ctx, tx, user); err != nil {
+			return err
+		}
 
-	return nil
+		// 3. clean the invitations
+		if err := s.deleteUserInvitations(ctx, tx, user.ID); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (s *UserStore) getUserFromInvitation(ctx context.Context, tx *sql.Tx, token string) (*User, error) {
@@ -183,28 +193,18 @@ func (s *UserStore) getUserFromInvitation(ctx context.Context, tx *sql.Tx, token
 	return user, nil
 }
 
-func (s *UserStore) Activate(ctx context.Context, token string) error {
+func (s *UserStore) createUserInvitation(ctx context.Context, tx *sql.Tx, token string, exp time.Duration, userID int64) error {
+	query := `INSERT INTO user_invitations (token, user_id, expiry) VALUES ($1, $2, $3)`
 
-	return withTx(s.db, ctx, func(tx *sql.Tx) error {
-		// 1. find the user that this token belongs to
-		user, err := s.getUserFromInvitation(ctx, tx, token)
-		if err != nil {
-			return err
-		}
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
 
-		// 2. update the user to set activated = true
-		user.IsActive = true
-		if err := s.update(ctx, tx, user); err != nil {
-			return err
-		}
+	_, err := tx.ExecContext(ctx, query, token, userID, time.Now().Add(exp))
+	if err != nil {
+		return err
+	}
 
-		// 3. clean the invitations
-		if err := s.deleteUserInvitations(ctx, tx, user.ID); err != nil {
-			return err
-		}
-
-		return nil
-	})
+	return nil
 }
 
 func (s *UserStore) update(ctx context.Context, tx *sql.Tx, user *User) error {
