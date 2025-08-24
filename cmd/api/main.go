@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/saikumaradapa/Connection-Sphere/internal/db"
 	"github.com/saikumaradapa/Connection-Sphere/internal/env"
+	"github.com/saikumaradapa/Connection-Sphere/internal/mailer"
 	"github.com/saikumaradapa/Connection-Sphere/internal/store"
 )
 
@@ -43,17 +44,22 @@ func main() {
 	port := env.GetString("PORT", "3030")
 
 	cfg := config{
-		addr:   fmt.Sprintf("%s:%s", host, port),
-		apiURL: env.GetString("EXTERNAL_URL", "localhost:3030"),
+		addr:        fmt.Sprintf("%s:%s", host, port),
+		apiURL:      env.GetString("EXTERNAL_URL", "localhost:3030"),
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://root:admin@localhost:5432/connection_sphere?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_IDLE_OPEN_CONNS", 30),
 			maxIdleTime:  env.GetString("MAX_IDLE_TIME", "15m"),
 		},
-		env: env.GetString("ENV", "dev"),
+		env: env.GetString("ENV", "development"),
 		mail: mailConfig{
-			exp: time.Hour * 3, // 3 days
+			exp:       time.Hour * 3, // 3 days
+			fromEmail: env.GetString("FROM_EMAIL", ""),
+			sendGrid: sendGridConfig{
+				apiKey: env.GetString("SENDGRID_API_KEY", ""),
+			},
 		},
 	}
 
@@ -81,10 +87,14 @@ func main() {
 	log.Printf("Connected to database at %s", cfg.db.addr)
 
 	store := store.NewStorage(db)
+
+	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 
 	mux := app.mount()

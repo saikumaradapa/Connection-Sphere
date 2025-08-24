@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/saikumaradapa/Connection-Sphere/docs" // This is required to generate Swagger docs
+	"github.com/saikumaradapa/Connection-Sphere/internal/mailer"
 	"github.com/saikumaradapa/Connection-Sphere/internal/store"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
@@ -19,18 +20,26 @@ type application struct {
 	config config
 	store  store.Storage
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 type config struct {
-	addr   string
-	db     dbConfig
-	env    string
-	apiURL string
-	mail   mailConfig
+	addr        string
+	db          dbConfig
+	env         string
+	apiURL      string
+	mail        mailConfig
+	frontendURL string
 }
 
 type mailConfig struct {
-	exp time.Duration
+	sendGrid  sendGridConfig
+	fromEmail string
+	exp       time.Duration
+}
+
+type sendGridConfig struct {
+	apiKey string
 }
 
 type dbConfig struct {
