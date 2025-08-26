@@ -28,5 +28,15 @@ func (a *JWTAuthenticator) GenerateToken(claims jwt.Claims) (string, error) {
 }
 
 func (a *JWTAuthenticator) ValidateToken(tokenString string) (*jwt.Token, error) {
-	return nil, nil
+	return jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrTokenMalformed
+		}
+		return []byte(a.secretKey), nil
+	},
+		jwt.WithExpirationRequired(),
+		jwt.WithAudience(a.aud),
+		jwt.WithIssuer(a.iss),
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
+	)
 }
