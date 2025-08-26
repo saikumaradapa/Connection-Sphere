@@ -38,13 +38,13 @@ func (app *application) unauthorizedErrorResponse(w http.ResponseWriter, r *http
 func (app *application) unauthorizedBasicErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Warnf("unauthorized basic error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	w.Header().Set("WWW-Authenticate", `Basic realm="Restricted", charset="UTF-8"`)
-
 	// Adds the 'WWW-Authenticate' header to the response, telling the client that
 	// Basic Authentication is required. The 'realm="Restricted"' label is shown in
 	// browser login prompts, and 'charset="UTF-8"' ensures credentials are encoded
 	// correctly. Without this header, the client wouldn't know it needs to provide
 	// username and password.
 	w.Header().Set("WWW-Authenticate", `Basic realm="Restricted", charset="UTF-8"`)
+
+	writeError(w, http.StatusUnauthorized, err.Error())
 
 }
