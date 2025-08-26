@@ -11,8 +11,10 @@ var (
 	ErrNotFound               = errors.New("resource not found")
 	QueryTimeoutDuration      = time.Second * 5
 	ErrAlreadyFollowing       = errors.New("already following the user")
+	ErrNotFollowing           = errors.New("not following the user")
 	ErrInvalidToken           = errors.New("invalid or missing token")
 	ErrActivationTokenExpired = errors.New("activation token has expired")
+	ErrUserMissingInContext   = errors.New("user missing in context")
 )
 
 type Storage struct {

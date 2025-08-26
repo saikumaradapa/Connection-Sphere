@@ -28,7 +28,11 @@ const userCtx userKey = "user"
 //	@Security		ApiKeyAuth
 //	@Router			/users/{id} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
-	user := getUserFromCtx(r)
+	user, err := getUserFromCtx(r)
+	if err != nil {
+		app.unauthorizedErrorResponse(w, r, err)
+		return
+	}
 
 	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
 		app.internalServerError(w, r, err)
@@ -36,79 +40,94 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type FollowUser struct {
-	UserID int64 `json:"user_id"`
-}
-
 // FollowUser godoc
 //
-//	@Summary		Follows a user
-//	@Description	Follows a user by ID
+//	@Summary		Follow a user
+//	@Description	Authenticated user (the follower) follows another user (the followed) by their ID.
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			userID	path		int		true	"User ID"
-//	@Success		204		{string}	string	"User followed"
-//	@Failure		400		{object}	error	"User payload missing"
-//	@Failure		404		{object}	error	"User not found"
+//	@Param			userID	path		int		true	"ID of the user to follow"
+//	@Success		204		{string}	string	"User followed successfully (no content returned)"
+//	@Failure		400		{object}	error	"Invalid user ID format"
+//	@Failure		401		{object}	error	"Unauthorized (missing or invalid token)"
+//	@Failure		404		{object}	error	"User to follow not found"
+//	@Failure		409		{object}	error	"Already following this user"
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/follow [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
-	followerUser := getUserFromCtx(r)
+	followerUser, err := getUserFromCtx(r)
+	if err != nil {
+		app.unauthorizedErrorResponse(w, r, err)
+		return
+	}
 
-	// TODO : revert back to auth userID from ctx
-	// TODO : also update in swagger docs
-	var payload FollowUser
-	if err := readJSON(w, r, &payload); err != nil {
+	followedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
 	ctx := r.Context()
-
-	err := app.store.Followers.Follow(ctx, followerUser.ID, payload.UserID)
+	err = app.store.Followers.Follow(ctx, followerUser.ID, followedID)
 	if err != nil {
 		switch err {
 		case store.ErrAlreadyFollowing:
 			app.conflictResponse(w, r, err)
-			return
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
 		default:
 			app.internalServerError(w, r, err)
-			return
 		}
+		return
 	}
+
+	app.jsonResponse(w, http.StatusNoContent, nil)
 }
 
-// UnfollowUser gdoc
+// UnfollowUser godoc
 //
 //	@Summary		Unfollow a user
-//	@Description	Unfollow a user by ID
+//	@Description	Authenticated user (the follower) unfollows another user (the followed) by their ID.
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			userID	path		int		true	"User ID"
-//	@Success		204		{string}	string	"User unfollowed"
-//	@Failure		400		{object}	error	"User payload missing"
-//	@Failure		404		{object}	error	"User not found"
+//	@Param			userID	path		int		true	"ID of the user to unfollow"
+//	@Success		204		{string}	string	"User unfollowed successfully (no content returned)"
+//	@Failure		400		{object}	error	"Invalid user ID format"
+//	@Failure		401		{object}	error	"Unauthorized (missing or invalid token)"
+//	@Failure		404		{object}	error	"User to unfollow not found"
+//	@Failure		409		{object}	error	"Not following this user"
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/unfollow [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	unfollowedUser := getUserFromCtx(r)
+	followerUser, err := getUserFromCtx(r)
+	if err != nil {
+		app.unauthorizedErrorResponse(w, r, err)
+		return
+	}
 
-	// TODO : revert back to auth userID from ctx
-	var payload FollowUser
-	if err := readJSON(w, r, &payload); err != nil {
+	unfollowedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
 	ctx := r.Context()
-
-	err := app.store.Followers.Unfollow(ctx, unfollowedUser.ID, payload.UserID)
+	err = app.store.Followers.Unfollow(ctx, followerUser.ID, unfollowedID)
 	if err != nil {
-		app.internalServerError(w, r, err)
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		case store.ErrNotFollowing:
+			app.conflictResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
 		return
 	}
+
+	app.jsonResponse(w, http.StatusNoContent, nil)
 }
 
 // ActivateUser godoc
@@ -179,10 +198,10 @@ func (app *application) userContextMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func getUserFromCtx(r *http.Request) *store.User {
+func getUserFromCtx(r *http.Request) (*store.User, error) {
 	user, ok := r.Context().Value(userCtx).(*store.User)
 	if !ok {
-		return nil
+		return nil, store.ErrUserMissingInContext
 	}
-	return user
+	return user, nil
 }
