@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/joho/godotenv"
+	"github.com/saikumaradapa/Connection-Sphere/internal/auth"
 	"github.com/saikumaradapa/Connection-Sphere/internal/db"
 	"github.com/saikumaradapa/Connection-Sphere/internal/env"
 	"github.com/saikumaradapa/Connection-Sphere/internal/mailer"
@@ -66,6 +67,12 @@ func main() {
 				username: env.GetString("BASIC_AUTH_USERNAME", "admin"),
 				password: env.GetString("BASIC_AUTH_PASSWORD", "password"),
 			},
+			token: tokenConfig{
+				secret:   env.GetString("JWT_SECRET", "supersecret"),
+				exp:      env.GetDuration("JWT_EXPIRATION", time.Hour*24), // default 1 day
+				issuer:   env.GetString("JWT_ISSUER", "connection-sphere"),
+				audience: env.GetString("JWT_AUDIENCE", "connection-sphere-clients"),
+			},
 		},
 	}
 
@@ -96,11 +103,18 @@ func main() {
 
 	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 
+	jwtAuthenticator := auth.NewJWTAuthenticator(
+		cfg.auth.token.secret,
+		cfg.auth.token.audience,
+		cfg.auth.token.issuer,
+	)
+
 	app := &application{
-		config: cfg,
-		store:  store,
-		logger: logger,
-		mailer: mailer,
+		config:        cfg,
+		store:         store,
+		logger:        logger,
+		mailer:        mailer,
+		authenticator: jwtAuthenticator,
 	}
 
 	mux := app.mount()

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // GetString returns the value of the environment variable if present,
@@ -35,4 +36,23 @@ func GetInt(key string, fallback int) int {
 	}
 
 	return valAsInt
+}
+
+// GetDuration returns the duration value of the environment variable if valid,
+// otherwise returns the provided fallback value.
+func GetDuration(key string, fallback time.Duration) time.Duration {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		log.Printf("env.GetDuration: key %q not found, using fallback", key)
+		return fallback
+	}
+
+	val = strings.TrimSpace(val)
+	dur, err := time.ParseDuration(val)
+	if err != nil {
+		log.Printf("env.GetDuration: invalid duration for key %q: %v", key, err)
+		return fallback
+	}
+
+	return dur
 }

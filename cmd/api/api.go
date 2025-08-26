@@ -11,16 +11,18 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/saikumaradapa/Connection-Sphere/docs" // This is required to generate Swagger docs
+	"github.com/saikumaradapa/Connection-Sphere/internal/auth"
 	"github.com/saikumaradapa/Connection-Sphere/internal/mailer"
 	"github.com/saikumaradapa/Connection-Sphere/internal/store"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 type application struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -35,6 +37,14 @@ type config struct {
 
 type authConfig struct {
 	basic basicConfig
+	token tokenConfig
+}
+
+type tokenConfig struct {
+	secret   string
+	exp      time.Duration
+	issuer   string
+	audience string
 }
 
 type basicConfig struct {
@@ -128,6 +138,7 @@ func (app *application) mount() http.Handler {
 		// Public routes
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
 
 	})
