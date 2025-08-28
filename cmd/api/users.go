@@ -20,13 +20,13 @@ const userCtx userKey = "user"
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			id	path		int	true	"User ID"
-//	@Success		200	{object}	store.User
-//	@Failure		400	{object}	error
-//	@Failure		404	{object}	error
-//	@Failure		500	{object}	error
+//	@Param			userID	path		int	true	"userID"
+//	@Success		200		{object}	store.User
+//	@Failure		400		{object}	error
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/users/{id} [get]
+//	@Router			/users/{userID} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {
@@ -34,7 +34,7 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := app.store.Posts.GetByID(r.Context(), userID)
+	user, err := app.store.Users.GetByID(r.Context(), userID)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -59,8 +59,8 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			userID	path		int		true	"ID of the user to follow"
-//	@Success		204		{string}	string	"User followed successfully (no content returned)"
+//	@Param			userID	path	int	true	"ID of the user to follow"
+//	@Success		204		"User followed successfully (no content returned)"
 //	@Failure		400		{object}	error	"Invalid user ID format"
 //	@Failure		401		{object}	error	"Unauthorized (missing or invalid token)"
 //	@Failure		404		{object}	error	"User to follow not found"
@@ -68,7 +68,7 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/follow [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
-	followerUser, err := getUserFromCtx(r)
+	follower, err := getUserFromCtx(r)
 	if err != nil {
 		app.unauthorizedErrorResponse(w, r, err)
 		return
@@ -81,7 +81,7 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	ctx := r.Context()
-	err = app.store.Followers.Follow(ctx, followerUser.ID, followedID)
+	err = app.store.Followers.Follow(ctx, follower.ID, followedID)
 	if err != nil {
 		switch err {
 		case store.ErrAlreadyFollowing:
@@ -104,8 +104,8 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			userID	path		int		true	"ID of the user to unfollow"
-//	@Success		204		{string}	string	"User unfollowed successfully (no content returned)"
+//	@Param			userID	path	int	true	"ID of the user to unfollow"
+//	@Success		204		"User unfollowed successfully (no content returned)"
 //	@Failure		400		{object}	error	"Invalid user ID format"
 //	@Failure		401		{object}	error	"Unauthorized (missing or invalid token)"
 //	@Failure		404		{object}	error	"User to unfollow not found"
@@ -113,20 +113,20 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/unfollow [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	followerUser, err := getUserFromCtx(r)
+	follower, err := getUserFromCtx(r)
 	if err != nil {
 		app.unauthorizedErrorResponse(w, r, err)
 		return
 	}
 
-	unfollowedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	followedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
 	ctx := r.Context()
-	err = app.store.Followers.Unfollow(ctx, followerUser.ID, unfollowedID)
+	err = app.store.Followers.Unfollow(ctx, follower.ID, followedID)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -149,7 +149,7 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 //	@Tags			users
 //	@Produce		json
 //	@Param			token	path		string	true	"Invitation token"
-//	@Success		204		{string}	string	"User activated"
+//	@Success		200		{string}	string	"User activated"
 //	@Failure		404		{object}	error
 //	@Failure		500		{object}	error
 //	@Security		ApiKeyAuth
