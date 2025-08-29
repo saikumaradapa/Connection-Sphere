@@ -19,7 +19,7 @@ SET
             roles 
         WHERE 
             name = 'user'
-    )
+    );
 
 ALTER TABLE 
     users
