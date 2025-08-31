@@ -88,7 +88,11 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 //	@Security		ApiKeyAuth
 //	@Router			/posts/{id} [get]
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
-	post := getPostFromCtx(r)
+	post, err := getPostFromCtx(r)
+	if err != nil {
+		app.notFoundResponse(w, r, err)
+		return
+	}
 
 	comments, err := app.store.Comments.GetByPostID(r.Context(), post.ID)
 	if err != nil {
@@ -162,7 +166,11 @@ type UpdatePostPayload struct {
 //	@Security		ApiKeyAuth
 //	@Router			/posts/{id} [patch]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
-	post := getPostFromCtx(r)
+	post, err := getPostFromCtx(r)
+	if err != nil {
+		app.notFoundResponse(w, r, err)
+		return
+	}
 
 	var payload UpdatePostPayload
 
@@ -229,12 +237,12 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// getPostFromCtx extracts the *store.Post from the request context.
-// Returns nil if the value is missing or not of the correct type.
-func getPostFromCtx(r *http.Request) *store.Post {
+// getPostFromCtx retrieves a *store.Post from the request context.
+// It returns an error if the post is not found or has an invalid type.
+func getPostFromCtx(r *http.Request) (*store.Post, error) {
 	post, ok := r.Context().Value(postCtx).(*store.Post)
 	if !ok {
-		return nil
+		return nil, store.ErrPostMissingInContext
 	}
-	return post
+	return post, nil
 }
