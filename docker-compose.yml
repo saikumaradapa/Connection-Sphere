@@ -12,6 +12,38 @@ services:
       - db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - backend
 
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    # Run Redis so that it persists data every time at least 1 change happens within 60 seconds,
+    # and only print warnings/errors in logs instead of noisy info messages.
+    command: redis-server --save 60 1 --loglevel warning
+    networks:
+      - backend
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    hostname: redis-commander
+    environment:
+      - REDIS_HOST=redis
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - backend
+  
 volumes:
   db-data:
+
+networks:
+  backend:
+    driver: bridge
