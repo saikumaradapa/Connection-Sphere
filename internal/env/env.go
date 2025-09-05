@@ -56,3 +56,24 @@ func GetDuration(key string, fallback time.Duration) time.Duration {
 
 	return dur
 }
+
+// GetBool returns the boolean value of the environment variable if valid,
+// otherwise returns the provided fallback value.
+func GetBool(key string, fallback bool) bool {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		log.Printf("env.GetBool: key %q not found, using fallback", key)
+		return fallback
+	}
+
+	val = strings.TrimSpace(strings.ToLower(val))
+	switch val {
+	case "1", "t", "true", "yes", "y":
+		return true
+	case "0", "f", "false", "no", "n":
+		return false
+	default:
+		log.Printf("env.GetBool: invalid boolean for key %q: %q, using fallback", key, val)
+		return fallback
+	}
+}

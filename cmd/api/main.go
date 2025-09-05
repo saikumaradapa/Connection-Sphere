@@ -7,12 +7,14 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"github.com/saikumaradapa/Connection-Sphere/internal/auth"
 	"github.com/saikumaradapa/Connection-Sphere/internal/db"
 	"github.com/saikumaradapa/Connection-Sphere/internal/env"
 	"github.com/saikumaradapa/Connection-Sphere/internal/mailer"
 	"github.com/saikumaradapa/Connection-Sphere/internal/store"
+	"github.com/saikumaradapa/Connection-Sphere/internal/store/cache"
 )
 
 const version = "0.0.1"
@@ -53,6 +55,12 @@ func main() {
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_IDLE_OPEN_CONNS", 30),
 			maxIdleTime:  env.GetString("MAX_IDLE_TIME", "15m"),
+		},
+		redisCfg: redisConfig{
+			addr:    env.GetString("REDIS_ADDR", "localhost:6379"),
+			pw:      env.GetString("REDIS_PW", ""),
+			db:      env.GetInt("REDIS_DB", 0),
+			enabled: env.GetBool("REDIS_ENABLED", false), // default disabled
 		},
 		env: env.GetString("ENV", "development"),
 		mail: mailConfig{
@@ -99,7 +107,15 @@ func main() {
 	defer db.Close()
 	log.Printf("Connected to database at %s", cfg.db.addr)
 
+	// Cache
+	var rdb *redis.Client
+	if cfg.redisCfg.enabled {
+		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		log.Printf("Connected to Redis DB at %s", cfg.redisCfg.addr)
+	}
+
 	store := store.NewStorage(db)
+	cacheStore := cache.NewRedisStorage(rdb)
 
 	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 
@@ -112,6 +128,7 @@ func main() {
 	app := &application{
 		config:        cfg,
 		store:         store,
+		cacheStore:    cacheStore,
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,

@@ -29,12 +29,14 @@ const userCtx userKey = "user"
 //	@Router			/users/{userID} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
-	if err != nil {
+	if err != nil || userID < 1 {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
-	user, err := app.store.Users.GetByID(r.Context(), userID)
+	ctx := r.Context()
+
+	user, err := app.getUser(ctx, userID)
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:

@@ -14,12 +14,14 @@ import (
 	"github.com/saikumaradapa/Connection-Sphere/internal/auth"
 	"github.com/saikumaradapa/Connection-Sphere/internal/mailer"
 	"github.com/saikumaradapa/Connection-Sphere/internal/store"
+	"github.com/saikumaradapa/Connection-Sphere/internal/store/cache"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 type application struct {
 	config        config
 	store         store.Storage
+	cacheStore    cache.Storage
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
@@ -33,6 +35,14 @@ type config struct {
 	mail        mailConfig
 	frontendURL string
 	auth        authConfig
+	redisCfg    redisConfig
+}
+
+type redisConfig struct {
+	addr    string
+	pw      string
+	db      int
+	enabled bool
 }
 
 type authConfig struct {
