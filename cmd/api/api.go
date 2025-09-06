@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"go.uber.org/zap"
@@ -166,15 +171,53 @@ func (app *application) run(mux http.Handler) error {
 	docs.SwaggerInfo.Host = app.config.apiURL
 	docs.SwaggerInfo.BasePath = "/v1"
 
+	// create a new HTTP server with timeouts and our routes (mux)
 	srv := &http.Server{
-		Addr:         app.config.addr,
-		Handler:      mux,
-		WriteTimeout: time.Second * 30,
-		ReadTimeout:  time.Second * 10,
-		IdleTimeout:  time.Minute,
+		Addr:         app.config.addr,  // server address (host:port)
+		Handler:      mux,              // main router for handling requests
+		WriteTimeout: time.Second * 30, // max time to write a response
+		ReadTimeout:  time.Second * 10, // max time to read the request
+		IdleTimeout:  time.Minute,      // how long to keep idle connections open
 	}
+
+	// channel to receive shutdown errors
+	shutdown := make(chan error)
+
+	// run a goroutine to listen for OS signals (like Ctrl+C)
+	go func() {
+		quit := make(chan os.Signal, 1)
+
+		// notify this channel when SIGINT (Ctrl+C) or SIGTERM (kill) is sent
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		s := <-quit // block until a signal is received
+
+		// give ongoing requests up to 5s to finish before shutdown
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		app.logger.Infow("server caught", "signal", s.String())
+
+		// attempt graceful shutdown
+		shutdown <- srv.Shutdown(ctx)
+	}()
 
 	app.logger.Infow("server has started", "addr", app.config.addr, "env", app.config.env)
 
-	return srv.ListenAndServe()
+	// start the server (this blocks until it stops)
+	err := srv.ListenAndServe()
+
+	// if the error is not "server closed" (normal shutdown), return it
+	if !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+
+	// wait for graceful shutdown to finish
+	err = <-shutdown
+	if err != nil {
+		return err
+	}
+
+	app.logger.Infow("server has stopped", "addr", app.config.addr, "env", app.config.env)
+
+	return nil
 }
