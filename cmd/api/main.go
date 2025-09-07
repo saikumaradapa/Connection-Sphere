@@ -13,6 +13,7 @@ import (
 	"github.com/saikumaradapa/Connection-Sphere/internal/db"
 	"github.com/saikumaradapa/Connection-Sphere/internal/env"
 	"github.com/saikumaradapa/Connection-Sphere/internal/mailer"
+	"github.com/saikumaradapa/Connection-Sphere/internal/ratelimiter"
 	"github.com/saikumaradapa/Connection-Sphere/internal/store"
 	"github.com/saikumaradapa/Connection-Sphere/internal/store/cache"
 )
@@ -82,6 +83,11 @@ func main() {
 				audience: env.GetString("JWT_AUDIENCE", "connection-sphere-clients"),
 			},
 		},
+		rateLimiter: ratelimiterConfig{
+			requestsPerTimeFrame: env.GetInt("RATE_LIMIT_REQUESTS", 100),
+			timeFrame:            env.GetDuration("RATE_LIMIT_TIMEFRAME", time.Minute),
+			enabled:              env.GetBool("RATE_LIMIT_ENABLED", false), // default disabled
+		},
 	}
 
 	// Logger configuration
@@ -111,8 +117,16 @@ func main() {
 	var rdb *redis.Client
 	if cfg.redisCfg.enabled {
 		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		defer rdb.Close()
+
 		log.Printf("Connected to Redis DB at %s", cfg.redisCfg.addr)
 	}
+
+	// Rate limiter
+	ratelimiter := ratelimiter.NewFixedWindowRateLimiter(
+		cfg.rateLimiter.requestsPerTimeFrame,
+		cfg.rateLimiter.timeFrame,
+	)
 
 	store := store.NewStorage(db)
 	cacheStore := cache.NewRedisStorage(rdb)
@@ -132,6 +146,7 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
+		rateLimiter:   ratelimiter,
 	}
 
 	mux := app.mount()
