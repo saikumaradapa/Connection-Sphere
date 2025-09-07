@@ -17,11 +17,6 @@ type UserStore struct {
 	rdb *redis.Client
 }
 
-// NewUserCache creates a new UserCache instance.
-func NewUserCache(rdb *redis.Client) *UserStore {
-	return &UserStore{rdb: rdb}
-}
-
 // Get retrieves a User from Redis by ID.
 // Returns (nil, nil) if the user is not found in cache.
 func (c *UserStore) Get(ctx context.Context, userID int64) (*store.User, error) {

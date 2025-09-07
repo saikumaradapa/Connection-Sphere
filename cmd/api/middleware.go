@@ -145,24 +145,27 @@ func (app *application) getUser(ctx context.Context, userID int64) (*store.User,
 		return app.store.Users.GetByID(ctx, userID)
 	}
 
-	app.logger.Infow("cache hit", "key", "user", "id", userID)
-
 	user, err := app.cacheStore.Users.Get(ctx, userID)
+	if err != nil {
+		app.logger.Warnw("cache error", "id", userID, "err", err)
+		return app.store.Users.GetByID(ctx, userID)
+	}
+
+	if user != nil {
+		app.logger.Infow("cache hit", "id", userID)
+		return user, nil
+	}
+
+	// Cache miss, fallback to DB
+	app.logger.Infow("cache miss, fetching from DB", "id", userID)
+	user, err = app.store.Users.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	if user == nil {
-		app.logger.Infow("fetching from DB", "id", userID)
-		user, err = app.store.Users.GetByID(ctx, userID)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := app.cacheStore.Users.Set(ctx, user); err != nil {
-			return nil, err
-		}
-
+	// Best-effort cache population (don’t fail request if caching fails)
+	if err := app.cacheStore.Users.Set(ctx, user); err != nil {
+		app.logger.Warnw("failed to update cache", "id", userID, "err", err)
 	}
 
 	return user, nil
