@@ -1,0 +1,61 @@
+# Root directory of your project
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "bin"
+
+[build]
+# Binary file Air should run after build
+bin = "bin\\main.exe"
+
+# Build command to compile the application
+cmd = "go build -o ./bin/main.exe ./cmd/api"
+
+# Delay after file change before rebuilding (in milliseconds)
+delay = 100000
+
+# Directories to exclude from watch
+exclude_dir = ["assets", "tmp", "vendor", "testdata", "scripts", ".idea"]
+
+# Regex for files to exclude (e.g., test files)
+exclude_regex = ["_test.go"]
+
+# File types/extensions to watch for changes
+include_ext = ["go", "tpl", "tmpl", "html"]
+
+# Log file for build errors
+log = "bin/build-errors.log"
+
+# Optional: set this if you're using polling instead of fsnotify
+poll = false
+
+# Run before build (generate Swagger docs)
+ pre_cmd = ["make gen-docs"]
+
+# Run after build
+post_cmd = []
+
+rerun = false
+
+[color]
+app = ""
+build = "yellow"
+main = "magenta"
+runner = "green"
+watcher = "cyan"
+
+[log]
+main_only = false
+silent = false
+time = false
+
+[misc]
+clean_on_exit = false
+
+[proxy]
+enabled = false
+app_port = 0
+proxy_port = 0
+
+[screen]
+clear_on_rebuild = true
+keep_scroll = true
