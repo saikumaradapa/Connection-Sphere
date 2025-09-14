@@ -1,13 +1,23 @@
+# Git
 .git
-# .air.toml
+
+# Environment files
 .env
 .env.dev
+
+# Editor / IDE settings
 .idea/
 .vscode/
 
+# Build & binary outputs
+/bin/
+*.exe
+*.out
+*.log
 
+# Docker / database data
+db-data/
+docker-compose*.yml
 
+# Local notes
 my-notes.md
-docker-compose-test.yml
-/bin
-db-data
