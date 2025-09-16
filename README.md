@@ -1,8 +1,8 @@
 # 🌐 Connection-Sphere
 
-A production-ready social media application backend written in **Go** to showcase modern backend engineering practices: clean architecture, repository pattern, distributed-system safeguards, PostgreSQL persistence, Redis caching, authentication & authorization, migrations, rate limiting, graceful shutdowns and developer productivity tooling and a rich set of developer and DevOps tools.
+> A production-ready social media application backend written in **Go** to showcase modern backend engineering practices: `clean architecture`, `repository pattern`, `distributed-system safeguards`, `PostgreSQL persistence`, `Redis caching`, `authentication & authorization`, `migrations`, `rate limiting`, `graceful shutdowns` and developer productivity tooling and a rich set of developer and `DevOps tools`.
 
-This repository is intended to demonstrate production-oriented patterns and integrations commonly used in real-world services.
+> This repository is intended to demonstrate `production-oriented patterns` and integrations commonly used in real-world services.
 
 ---
 ## ✨ Highlights / What I Built
@@ -61,60 +61,70 @@ Connection-Sphere/
 ## 🏃 How to Run (Developer Flow - Windows)
 
 1. **Clone the repository: Connection-Sphere**
-```powershell
-git clone https://github.com/saikumaradapa/Connection-Sphere.git
-cd Connection-Sphere
-```
+
+    ```bash
+    git clone https://github.com/saikumaradapa/Connection-Sphere.git
+    cd Connection-Sphere
+    ```
 
 2. **Ensure Go is installed** (Go 1.20+ recommended). Initialize modules:
-```powershell
-go mod tidy
-```
+
+    ```bash
+    go mod tidy
+    ```
 
 3. **Start dependencies** (Postgres, Redis, Redis Commander) with Docker Compose:
-```powershell
-docker-compose up -d
-```
+
+    ```bash
+    docker-compose up -d
+    ```
 
 4. **Install `make`** (if you don't have it) using Chocolatey:
-```powershell
-choco install make
-```
+
+    ```bash
+    choco install make
+    ```
 
 5. **Install the go-migrate CLI:**
-```powershell
-go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-```
+
+    ```bash
+    go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+    ```
 
 6. **Run migrations and seed demo data:**
-```powershell
-make migrate-up    # create/upgrade DB schema
-make seed          # run seeding script (cmd/migrate/seed)
-```
+
+    ```bash
+    make migrate-up    # create/upgrade DB schema
+    make seed          # run seeding script (cmd/migrate/seed)
+    ```
 
 7. **(Optional) Install Air for hot reload (one-time):**
-```powershell
-go install github.com/air-verse/air@latest
-# air init not required because .air.toml is provided
-```
+
+    ```bash
+    go install github.com/air-verse/air@latest
+    # air init not required because .air.toml is provided
+    ```
 
 8. **Copy environment example and update values:**
-```powershell
-copy .env.example .env.dev
-# Edit .env.dev and fill DB/Redis/SendGrid/JWT secrets
-```
+
+    ```bash
+    copy .env.example .env.dev
+    # Edit .env.dev and fill DB/Redis/SendGrid/JWT secrets
+    ```
 
 9. **Start the dev server with Air (or run the binary directly):**
-```powershell
-air            
-# builds the binary and runs with live-reload
-# or run directly (no live reload)
-go run ./cmd/api
-```
+
+    ```bash
+    air            
+    # builds the binary and runs with live-reload
+    # or run directly (no live reload)
+    go run ./cmd/api
+    ```
 
 10. **UI Access**
-- Swagger API Docs: [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
-- Redis Commander: [http://localhost:8081/](http://localhost:8081/)
+
+    - Swagger API Docs: [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+    - Redis Commander: [http://localhost:8081/](http://localhost:8081/)
 
 ---
 ## 🧩 Makefile Commands
@@ -163,12 +173,12 @@ This design enables easy swapping of data sources or refactoring without impacti
 ---
 ## ✨ Contributing
 
-Pull requests are welcome! 🙌 This project is open for contributions from the community. 🌍
+👉🏻 Pull requests are welcome! 🙌 This project is open for contributions from the community. 🌍
 
-If you'd like to contribute, feel free to fork the repository, make your changes, and open a pull request. 🔄💻
+👉🏻If you'd like to contribute, feel free to fork the repository, make your changes, and open a pull request. 🔄💻
 
 ---
 
 ## 🤝 Connect with Me
 
-You can connect with me on LinkedIn: **[Sai Kumar Adapa](https://www.linkedin.com/in/sai-kumar-adapa-5a16b2228/)** 🔗😊
+> You can connect with me on LinkedIn: **[Sai Kumar Adapa](https://www.linkedin.com/in/sai-kumar-adapa-5a16b2228/)** 🔗😊
