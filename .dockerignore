@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.*
+
+# Editor / IDE settings
+.idea/
+.vscode/
+
+# Build & binary outputs
+/bin/
+*.exe
+*.out
+*.log
+
+# Docker files (not needed in build context)
+docker-compose*.yml
+Dockerfile
+
+# Local data
+db-data/
+
+# Documentation (keep docs/ for swagger)
+README.md
+my-notes.md

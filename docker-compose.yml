@@ -14,6 +14,11 @@ services:
       - "5432:5432"
     networks:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d connection_sphere"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:6.2-alpine
@@ -21,11 +26,14 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
-    # Run Redis so that it persists data every time at least 1 change happens within 60 seconds,
-    # and only print warnings/errors in logs instead of noisy info messages.
     command: redis-server --save 60 1 --loglevel warning
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis-commander:
     image: rediscommander/redis-commander:latest
@@ -37,6 +45,24 @@ services:
       - "127.0.0.1:8081:8081"
     depends_on:
       - redis
+    restart: unless-stopped
+    networks:
+      - backend
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: connection-sphere-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.docker
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - backend

@@ -111,8 +111,8 @@ func (app *application) mount() http.Handler {
 
 	// Add CORS middleware
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins:   []string{"http://localhost:*", "https://*.run.app", app.config.frontendURL},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
@@ -125,7 +125,7 @@ func (app *application) mount() http.Handler {
 	})
 
 	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://"+app.config.addr+"/swagger/doc.json"),
+		httpSwagger.URL(app.config.apiURL+"/swagger/doc.json"),
 	))
 
 	// API routes under /v1

@@ -1,5 +1,5 @@
 ##############################################
-# 1️⃣  BUILD STAGE – Compile the Go binary
+# 1. BUILD STAGE – Compile the Go binary
 ##############################################
 
 # Use the official Go 1.24 image as a build environment.
@@ -22,7 +22,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o api cmd/api/*.go
 
 
 ##############################################
-# 2️⃣  RUN STAGE – Create the minimal runtime image
+# 2. RUN STAGE – Create the minimal runtime image
 ##############################################
 
 # Use the empty "scratch" image to keep the final image tiny.
@@ -38,6 +38,9 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Copy the compiled Go binary from the builder stage to the runtime container
 COPY --from=builder /app/api .
+
+# Copy swagger docs for API documentation
+COPY --from=builder /app/docs ./docs
 
 # Expose port 8080 so platforms like Docker/Kubernetes/Cloud Run
 # know which port the application listens on.

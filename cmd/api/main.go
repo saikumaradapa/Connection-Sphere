@@ -46,13 +46,13 @@ func main() {
 		log.Println("No .env file found, using system environment variables")
 	}
 
-	host := env.GetString("HOST", "localhost")
-	port := env.GetString("PORT", "3030")
+	host := env.GetString("HOST", "0.0.0.0")
+	port := env.GetString("PORT", "8080")
 
 	cfg := config{
 		addr:        fmt.Sprintf("%s:%s", host, port),
-		apiURL:      env.GetString("EXTERNAL_URL", "localhost:3030"),
-		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
+		apiURL:      env.GetString("EXTERNAL_URL", "http://localhost:8080"),
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:3000"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://root:admin@localhost:5432/connection_sphere?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
