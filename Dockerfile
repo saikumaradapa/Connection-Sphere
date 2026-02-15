@@ -42,6 +42,12 @@ COPY --from=builder /app/api .
 # Copy swagger docs for API documentation
 COPY --from=builder /app/docs ./docs
 
+# Copy frontend static files
+COPY --from=builder /app/web ./web
+
+# Copy email templates
+COPY --from=builder /app/internal/mailer/templates ./internal/mailer/templates
+
 # Expose port 8080 so platforms like Docker/Kubernetes/Cloud Run
 # know which port the application listens on.
 EXPOSE 8080
