@@ -21,3 +21,5 @@ docker-compose*.yml
 
 # Local notes
 my-notes.md
+
+web-vanilla/
