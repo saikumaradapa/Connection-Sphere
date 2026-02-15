@@ -45,7 +45,13 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 
 	ctx := r.Context()
 
-	feed, err := app.store.Posts.GetUserFeed(ctx, int64(1), fq) // update hardcoded id
+	user, err := getUserFromCtx(r)
+	if err != nil {
+		app.unauthorizedErrorResponse(w, r, err)
+		return
+	}
+
+	feed, err := app.store.Posts.GetUserFeed(ctx, user.ID, fq)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
