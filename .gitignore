@@ -4,6 +4,7 @@
 # Environment files
 .env
 .env.dev
+.env.prod
 
 # Editor / IDE settings
 .idea/
@@ -17,9 +18,12 @@
 
 # Docker / database data
 db-data/
-docker-compose*.yml
 
 # Local notes
 my-notes.md
 
-web-vanilla/
+# Frontend dev dependencies
+node_modules/
+
+# Kiro specs
+.kiro/

@@ -181,3 +181,61 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 }
+
+func (app *application) guestLoginHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Generate random guest credentials
+	id := uuid.New().String()[:8]
+	username := "guest_" + id
+	email := "guest_" + id + "@guest.local"
+	rawPassword := uuid.New().String()
+
+	user := &store.User{
+		Username: username,
+		Email:    email,
+		Role:     store.Role{Name: "user"},
+	}
+
+	if err := user.Password.Set(rawPassword); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// Create invitation token (needed by CreateAndInvite)
+	plainToken := uuid.New().String()
+	hash := sha256.Sum256([]byte(plainToken))
+	hashToken := hex.EncodeToString(hash[:])
+
+	if err := app.store.Users.CreateAndInvite(ctx, user, hashToken, app.config.mail.exp); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// Activate immediately
+	if err := app.store.Users.Activate(ctx, plainToken); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// Generate JWT
+	claims := jwt.MapClaims{
+		"sub": user.ID,
+		"exp": time.Now().Add(app.config.auth.token.exp).Unix(),
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
+		"iss": app.config.auth.token.issuer,
+		"aud": app.config.auth.token.audience,
+	}
+
+	token, err := app.authenticator.GenerateToken(claims)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+

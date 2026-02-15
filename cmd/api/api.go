@@ -171,8 +171,26 @@ func (app *application) mount() http.Handler {
 		r.Route("/authentication", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
 			r.Post("/token", app.createTokenHandler)
+			r.Post("/guest", app.guestLoginHandler)
 		})
 
+	})
+
+	// Static file serving for frontend SPA
+	fileServer := http.FileServer(http.Dir("./web"))
+	r.Handle("/assets/*", fileServer)
+	r.Handle("/js/*", fileServer)
+
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./web/index.html")
+	})
+
+	r.Get("/confirm/*", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./web/index.html")
+	})
+
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./web/index.html")
 	})
 
 	return r

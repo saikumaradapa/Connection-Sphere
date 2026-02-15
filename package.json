@@ -1,0 +1,14 @@
+{
+  "name": "connection-sphere-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.1",
+    "jsdom": "^26.1.0",
+    "fast-check": "^4.1.1"
+  }
+}
